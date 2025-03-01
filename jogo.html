@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio de Matemática da Luize</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        body { 
+            font-family: 'Press Start 2P', cursive; 
+            text-align: center; 
+            margin: 20px; 
+            background-color: #87C232; 
+            color: #333; 
+        }
+        #quiz-container { 
+            max-width: 500px; 
+            margin: auto; 
+            padding: 20px; 
+            border: 4px solid #4F772D; 
+            border-radius: 10px; 
+            background: #D0F0C0; 
+            box-shadow: 5px 5px 15px rgba(0,0,0,0.3); 
+        }
+        button { 
+            margin: 10px; 
+            padding: 10px; 
+            cursor: pointer; 
+            width: 100%; 
+            border: none; 
+            border-radius: 5px; 
+            font-size: 16px; 
+            font-family: 'Press Start 2P', cursive;
+            background: #4F772D; 
+            color: white; 
+        }
+        .correct { background-color: #4CAF50; color: white; }
+        .wrong { background-color: #FF5733; color: white; }
+        .level-up { font-size: 18px; color: #2E8B57; font-weight: bold; }
+        #trofeu { font-size: 24px; }
+    </style>
+</head>
+<body>
+    <h1>🏆 Desafio de Matemática da Luize 🦄🐑</h1>
+    <div id="start-container">
+        <input type="text" id="nome" placeholder="Seu nome" />
+        <button onclick="iniciarJogo()">Novo Jogo</button>
+        <button onclick="exibirRanking()">Ver Ranking</button>
+    </div>
+    <div id="quiz-container" style="display:none;">
+        <h2 id="nivel"></h2>
+        <h3 id="pergunta"></h3>
+        <div id="opcoes"></div>
+        <p id="resultado"></p>
+        <h3>Pontuação: <span id="pontuacao">0</span></h3>
+        <h3>Erros: <span id="erros">0</span>/3</h3>
+        <h3 id="trofeu"></h3>
+    </div>
+    <ul id="ranking"></ul>
+    
+    <script>
+        const niveis = ["Nível Noob", "Iniciante", "Mediano", "Expert", "Mega Expert"];
+        let ranking = JSON.parse(localStorage.getItem("ranking")) || [];
+        let nivelAtual = 0, pontuacao = 0, erros = 0, nomeJogador = "";
+
+        function iniciarJogo() {
+            nomeJogador = document.getElementById("nome").value || "Anônimo";
+            document.getElementById("start-container").style.display = "none";
+            document.getElementById("quiz-container").style.display = "block";
+            alert("Bem-vindo ao Desafio de Matemática da Luize! 🎮\n\nRegras:\n- Cada fase tem 5 perguntas!\n- Se errar 3 vezes, o jogo acaba!\n- Acerte para avançar e ganhar pontos! 🏆");
+            atualizarTroféu();
+            carregarPergunta();
+        }
+
+        function atualizarTroféu() {
+            if (ranking.length > 0) {
+                document.getElementById("trofeu").innerText = `🏆 Líder: ${ranking[0].nome} - ${ranking[0].pontuacao} pontos`;
+            }
+        }
+
+        function gerarPergunta() {
+            let a = Math.floor(Math.random() * 10);
+            let b = Math.floor(Math.random() * 10);
+            let resposta = a + b;
+            let opcoes = [resposta, resposta + 1, resposta - 1, resposta + 2].sort(() => Math.random() - 0.5);
+            return { pergunta: `${a} + ${b} = ?`, opcoes, resposta };
+        }
+
+        function carregarPergunta() {
+            document.getElementById("nivel").innerText = niveis[nivelAtual];
+            let perguntaAtual = gerarPergunta();
+            document.getElementById("pergunta").innerText = perguntaAtual.pergunta;
+            let opcoesDiv = document.getElementById("opcoes");
+            opcoesDiv.innerHTML = "";
+            perguntaAtual.opcoes.forEach(opcao => {
+                let btn = document.createElement("button");
+                btn.innerText = opcao;
+                btn.onclick = () => verificarResposta(opcao, perguntaAtual.resposta, perguntaAtual.pergunta);
+                opcoesDiv.appendChild(btn);
+            });
+        }
+
+        function verificarResposta(respostaUsuario, respostaCorreta, perguntaTexto) {
+            if (respostaUsuario === respostaCorreta) {
+                pontuacao++;
+                alert(`🎉 Parabéns! Você acertou!`);
+            } else {
+                erros++;
+                document.getElementById("erros").innerText = erros;
+                alert(`❌ Ops, errou... A resposta correta para ${perguntaTexto} é ${respostaCorreta}!`);
+                if (erros >= 3) return fimDeJogo();
+            }
+            document.getElementById("pontuacao").innerText = pontuacao;
+            setTimeout(carregarPergunta, 1000);
+        }
+
+        function fimDeJogo() {
+            ranking.push({ nome: nomeJogador, pontuacao });
+            ranking.sort((a, b) => b.pontuacao - a.pontuacao);
+            ranking = ranking.slice(0, 10);
+            localStorage.setItem("ranking", JSON.stringify(ranking));
+            alert("Fim do jogo! Pontuação: " + pontuacao);
+            location.reload();
+        }
+
+        function exibirRanking() {
+            let rankingLista = document.getElementById("ranking");
+            rankingLista.innerHTML = "<h3>Ranking - Top 10 🏆</h3>";
+            ranking.forEach((jogador, index) => {
+                let li = document.createElement("li");
+                li.innerText = `#${index + 1} - ${jogador.nome}: ${jogador.pontuacao} pontos`;
+                rankingLista.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>
